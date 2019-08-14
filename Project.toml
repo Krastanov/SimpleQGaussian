@@ -1,0 +1,13 @@
+name = "SimpleQGaussian"
+uuid = "e4a1837a-bdf0-11e9-30e9-cd79f95d3ce9"
+authors = ["Stefan Krastanov <stefan@krastanov.org>"]
+version = "0.1.0"
+
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+julia = "≥ 1.1"
