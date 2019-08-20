@@ -143,6 +143,17 @@ end
     @test (squeeze_f(z1,n)*squeeze_f(z2,n))[1:nsub,1] ≈ phase*squeeze_f(z3,n)[1:nsub,1]
 end
 
+@testset "Gaussian Operators" begin
+    r = rand()
+    s = rand()
+    a = 1+1im
+    b = rand()+rand()*im
+    t = rand()
+    @test inner(gauss(a,t,r), gauss(b,pi/√2,s)) ≈ inner(gauss(0,t,r), Displace(-a)*gauss(b,pi/√2,s))
+    @test inner(gauss(0,t,r), gauss(b,pi/√2,s)) ≈ inner(gauss(0,0,r), Rotate(-t)*gauss(b,pi/√2,s))
+    @test inner(gauss(0,0,r), gauss(a,pi/√2,s)) ≈ inner(gauss(0,0,0), Squeeze(-r)*gauss(a,pi/√2,s))
+end
+
 end
 
 tests()

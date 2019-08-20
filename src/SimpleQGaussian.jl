@@ -8,7 +8,8 @@ export Coherent, coh, Gauss, gauss, PureSuperposition,
     create_f, destroy_f, numop_f, displace_f, rotate_f, squeeze_f,
     quadrature, camplitude, covariance, squeezeparam, rotparam,
     inner, absinner,
-    displace_squeeze_overlap
+    displace_squeeze_overlap,
+    Displace, Squeeze, Rotate
 
 # TODO document that ħ=2 and κ=0.5 in this code
 # TODO use StaticArray for small matrices
@@ -61,8 +62,8 @@ coh = Coherent
 
 struct Gauss{T<:Real} <: AbstractPureGauss
     # TODO why not AbstractVector and AbstractMatrix
-    loc::Vector{T} # TODO maybe the vector and matrix here should be static
-    cov::Matrix{T} # TODO or maybe they should be Abstract, but static by default
+    loc::AbstractVector{T} # TODO maybe the vector and matrix here should be static
+    cov::AbstractMatrix{T} # TODO or maybe they should be Abstract, but static by default
 end
 
 function Gauss(x,p,θ,r)
@@ -163,6 +164,7 @@ Base.:(+)(s::AbstractPureState) = s
 Base.:(-)(s::AbstractPureState) = PureSuperposition([Complex(-1)],[s])
 Base.:(-)(s::PureSuperposition) = PureSuperposition(-s.weights,s.states)
 Base.:(+)(l::AbstractPureState, r::AbstractPureState) = +(promote(l,r)...)
+Base.:(+)(l::AbstractPureGauss, r::AbstractPureGauss) = PureSuperposition([Complex(1),Complex(1)],[l,r])
 Base.:(-)(l::AbstractPureState, r::AbstractPureState) = l + (-r)
 Base.:(+)(l::PureSuperposition, r::PureSuperposition) = PureSuperposition(vcat(l.weights,r.weights),vcat(l.states,r.states))
 
@@ -293,5 +295,27 @@ function absinner(l::AbstractPureGauss,r::AbstractPureGauss) # using arXiv:quant
     Δ = det(V)
     √(2/√Δ) * exp(-(d'*inv(V)*d)/4)
 end
+
+abstract type GaussianOperation end
+
+struct Displace <: GaussianOperation
+    alpha # TODO specify types
+end
+
+struct Rotate <: GaussianOperation
+    theta # TODO specify types
+end
+
+struct Squeeze <: GaussianOperation
+    r # TODO specify types
+end
+
+Base.:(*)(op::GaussianOperation, s::PureSuperposition) = sum([s.weights[i]*(op*s.states[i]) for i in eachindex(s.states)]) # TODO make this faster
+
+Base.:(*)(d::Displace, g::AbstractPureGauss) = displace_prodphase(d.alpha,camplitude(g)) * Gauss(quadrature(g)+[real(d.alpha),imag(d.alpha)]/κ, covariance(g)*1.) # TODO fix this stupid *1.
+
+Base.:(*)(r::Rotate, g::AbstractPureGauss) = Gauss(rmat(r.theta)*quadrature(g), rmat(r.theta)*covariance(g)*rmat(r.theta)')
+
+Base.:(*)(s::Squeeze, g::AbstractPureGauss) = squeeze_prod(s.r,0,squeezeparam(g),-2*rotparam(g))[2]*Gauss(smat(s.r)*quadrature(g), smat(s.r)*covariance(g)*smat(s.r)')
 
 end #module
